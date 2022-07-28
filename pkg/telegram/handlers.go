@@ -8,6 +8,7 @@ import (
 )
 
 const commandStart = "start"
+const commandWalletsList = "wallets_list"
 const commandAddWallet = "add_wallet"
 const commandRemoveWallet = "remove_wallet"
 const commandLogin = "login"
@@ -33,14 +34,65 @@ func (b *Bot) handleCommand(message *tgbotapi.Message) {
 	switch message.Command() {
 
 	case commandAddWallet:
-		resp := "Add wallet"
-		b.SendMessage(resp, message.Chat.ID)
+		b.handleAddWallet(message)
 	case commandRemoveWallet:
-		resp := "Remove wallet"
-		b.SendMessage(resp, message.Chat.ID)
+		b.handleDeleteWallet(message)
+	case commandWalletsList:
+		b.handleWalletsList(message)
 	default:
 		b.handleUnknownCommand(message)
 	}
+}
+
+func (b *Bot) handleWalletsList(message *tgbotapi.Message) {
+	user := models.GetUserByChatId(message.Chat.ID)
+	wallets := models.GetAllWalletsByUserID(user.ID)
+
+	b.sendWalletsList(wallets, message)
+}
+
+func (b *Bot) handleAddWallet(message *tgbotapi.Message) {
+	cmd := strings.Split(message.Text, " ")
+
+	if len(cmd) < 2 {
+		b.sendWrongCommandUsage(message)
+		return
+	}
+
+	walletAddr := cmd[1]
+
+	user := models.GetUserByChatId(message.Chat.ID)
+	wallet := models.NewWallet()
+
+	wallet.Wallet = walletAddr
+	wallet.UserID = user.ID
+
+	if _, err := models.AddWallet(wallet); err != nil {
+		b.sendWalletWasNotAdded(message)
+		return
+	}
+
+	b.sendWalletWasAdded(wallet.Wallet, message)
+}
+
+func (b *Bot) handleDeleteWallet(message *tgbotapi.Message) {
+	cmd := strings.Split(message.Text, " ")
+	if len(cmd) < 2 {
+		b.sendWrongCommandUsage(message)
+		return
+	}
+	walletAddr := cmd[1]
+	user := models.GetUserByChatId(message.Chat.ID)
+	wallet := models.NewWallet()
+	wallet.Wallet = walletAddr
+	wallet.UserID = user.ID
+
+	if err := models.DeleteWallet(wallet); err != nil {
+		b.sendWalletWasNotDeleted(message)
+		return
+	}
+
+	b.sendWalletWasDeleted(message)
 }
 
 func (b *Bot) handleUnknownCommand(message *tgbotapi.Message) {
@@ -55,6 +107,16 @@ func (b *Bot) handleStartCommand(message *tgbotapi.Message) {
 
 func (b *Bot) handleLoginCommand(message *tgbotapi.Message) {
 	m := strings.Split(message.Text, " ")
+
+	if models.IsUserLoggedIn(message.Chat.ID) == true {
+		b.SendMessage("You are logged in already", message.Chat.ID)
+		return
+	}
+
+	if len(m) < 2 {
+		b.SendMessage("Wrong command usage enter login and password please (/login <username> <password>)", message.Chat.ID)
+		return
+	}
 
 	login := m[1]
 	password := m[2]
@@ -73,14 +135,6 @@ func (b *Bot) handleLoginCommand(message *tgbotapi.Message) {
 
 	b.authUser(login, message.Chat.ID)
 	b.SendMessage("You are logged in, you can use bot functions", message.Chat.ID)
-}
-
-func (b *Bot) sendLoginOrPasswordIsIncorrect(message *tgbotapi.Message) {
-	b.SendMessage("Login or password is incorrect", message.Chat.ID)
-}
-
-func (b *Bot) sendUserShouldBeLoggedIn(message *tgbotapi.Message) {
-	b.SendMessage("login first using: /login <username> <password>", message.Chat.ID)
 }
 
 func (b *Bot) handleMessage(message *tgbotapi.Message) {

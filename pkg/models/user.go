@@ -7,11 +7,11 @@ import (
 )
 
 type User struct {
-	ID           int
-	PasswordHash string
-	Login        string
-	ChatId       int64
-	IsLoggedIn   int
+	ID           int    `db:"users.id"`
+	PasswordHash string `db:"users.password_hash"`
+	Login        string `db:"users.login"`
+	ChatId       int64  `db:"users.chat_id"`
+	IsLoggedIn   int    `db:"users.is_logged_in"`
 }
 
 func GetUserByChatId(chatId int64) User {

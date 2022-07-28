@@ -14,8 +14,20 @@ const createUser string = `
 	  is_logged_in INTEGER DEFAULT 0
   );`
 
+const createWallets string = `
+	CREATE TABLE IF NOT EXISTS wallets (
+	  id INTEGER PRIMARY KEY,
+	  user_id INTEGER NOT NULL,
+	  wallet TEXT NOT NULL UNIQUE,
+	  last_transaction TEXT
+);`
+
 func InitDB() error {
 	if _, err := dbInstance.Exec(createUser); err != nil {
+		return err
+	}
+
+	if _, err := dbInstance.Exec(createWallets); err != nil {
 		return err
 	}
 
