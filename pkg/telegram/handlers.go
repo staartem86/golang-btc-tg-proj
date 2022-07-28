@@ -52,14 +52,12 @@ func (b *Bot) handleWalletsList(message *tgbotapi.Message) {
 }
 
 func (b *Bot) handleAddWallet(message *tgbotapi.Message) {
-	cmd := strings.Split(message.Text, " ")
+	walletAddr := message.CommandArguments()
 
-	if len(cmd) < 2 {
+	if len(walletAddr) < 1 {
 		b.sendWrongCommandUsage(message)
 		return
 	}
-
-	walletAddr := cmd[1]
 
 	user := models.GetUserByChatId(message.Chat.ID)
 	wallet := models.NewWallet()
@@ -76,12 +74,11 @@ func (b *Bot) handleAddWallet(message *tgbotapi.Message) {
 }
 
 func (b *Bot) handleDeleteWallet(message *tgbotapi.Message) {
-	cmd := strings.Split(message.Text, " ")
-	if len(cmd) < 2 {
+	walletAddr := message.CommandArguments()
+	if len(walletAddr) < 1 {
 		b.sendWrongCommandUsage(message)
 		return
 	}
-	walletAddr := cmd[1]
 	user := models.GetUserByChatId(message.Chat.ID)
 	wallet := models.NewWallet()
 	wallet.Wallet = walletAddr
@@ -106,7 +103,7 @@ func (b *Bot) handleStartCommand(message *tgbotapi.Message) {
 }
 
 func (b *Bot) handleLoginCommand(message *tgbotapi.Message) {
-	m := strings.Split(message.Text, " ")
+	m := strings.Split(message.CommandArguments(), " ")
 
 	if models.IsUserLoggedIn(message.Chat.ID) == true {
 		b.SendMessage("You are logged in already", message.Chat.ID)
@@ -118,8 +115,8 @@ func (b *Bot) handleLoginCommand(message *tgbotapi.Message) {
 		return
 	}
 
-	login := m[1]
-	password := m[2]
+	login := m[0]
+	password := m[1]
 
 	user := models.LoadUserByLogin(login)
 
