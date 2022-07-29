@@ -3,6 +3,7 @@ package database
 import (
 	"TestProjectForBtcTgBot/pkg/hash"
 	"fmt"
+	"os"
 )
 
 const createUser string = `
@@ -19,7 +20,7 @@ const createWallets string = `
 	  id INTEGER PRIMARY KEY,
 	  user_id INTEGER NOT NULL,
 	  wallet TEXT NOT NULL UNIQUE,
-	  last_transaction TEXT
+	  last_transaction INTEGER
 );`
 
 func InitDB() error {
@@ -31,7 +32,7 @@ func InitDB() error {
 		return err
 	}
 
-	pwd, _ := hash.HashPassword("qwerty")
+	pwd, _ := hash.HashPassword(os.Getenv("USER_PASSWORD"))
 
 	insertQuery := fmt.Sprintf("INSERT INTO users (login, password_hash) VALUES ('username', '%s')", pwd)
 

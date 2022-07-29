@@ -27,6 +27,19 @@ func GetUserByChatId(chatId int64) User {
 	return user
 }
 
+func GetUserById(id int) User {
+	row := database.Instance().QueryRow("SELECT * FROM users WHERE id = ?", id)
+	if row == nil {
+		log.Fatal(row)
+	}
+
+	var user User
+
+	row.Scan(&user.ID, &user.Login, &user.PasswordHash, &user.ChatId, &user.IsLoggedIn)
+
+	return user
+}
+
 func IsUserLoggedIn(tgChatId int64) bool {
 	user := GetUserByChatId(tgChatId)
 	if user.ID == 0 {
