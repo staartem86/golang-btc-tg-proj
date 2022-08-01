@@ -24,7 +24,7 @@ func AddWallet(wallet Wallet) (Wallet, error) {
 		return wallet, errors.New("wallet exists")
 	}
 
-	lastT := time.Now().Add(-5 * 24 * time.Hour).Unix()
+	lastT := time.Now().Unix()
 
 	_, err := database.Instance().Exec("INSERT INTO wallets (user_id, wallet, last_transaction) values (?, ?, ?)", wallet.UserID, wallet.Wallet, lastT)
 	if err != nil {
